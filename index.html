@@ -8,8 +8,9 @@
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 
-<body class="bg-gray-100 flex items-center justify-center h-screen">
-    <div class="bg-white p-6 rounded shadow-lg max-w-md w-full" id="quiz-container">
+<body class="bg-gray-100">
+    <div class="bg-white p-4 rounded shadow-lg max-w-full w-full overflow-auto fixed top-0 left-0 right-0 bottom-0"
+        id="quiz-container" style="margin-top: 20px;">
         <div class="flex justify-between items-center mb-4">
             <h1 class="text-2xl font-bold">Tes Kecermatan</h1>
             <div id="timer" class="text-xl font-semibold text-gray-700">01:00</div>
@@ -17,12 +18,10 @@
 
         <h2 id="soal-label" class="text-lg font-bold text-center mb-2"></h2>
 
-        <div id="kolom-utama" class="grid grid-cols-5 gap-4 mb-2"></div>
-        <div id="kolom-label" class="grid grid-cols-5 gap-4 mb-4"></div>
-
-        <div id="kolom-kedua" class="grid grid-cols-4 gap-4 mb-4"></div>
-        <div class="text-center font-semibold mb-4">Pilih huruf yang hilang:</div>
-        <div id="pilihan-jawaban" class="grid grid-cols-5 gap-4"></div>
+        <!-- Mengubah grid menjadi 3 kolom per baris -->
+        <div id="soal-container"
+            class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-4 p-4 overflow-auto"
+            style="max-height: 80vh;"></div>
         <p id="feedback" class="text-center font-bold mt-4"></p>
         <button id="reset-button" class="mt-4 px-6 py-2 bg-blue-500 text-white font-bold rounded hover:bg-blue-600"
             style="display: none;">
@@ -32,13 +31,10 @@
 
     <script>
         let detik = 0;
-        let currentQuestion = 0;
-        let correctAnswers = 0;
-        let wrongAnswers = 0;
-        let unansweredQuestions = 0; // Menyimpan soal yang tidak terjawab
         let questions = [];
         let timerInterval;
         let countdown;
+        let answeredQuestions = 0;
 
         function acakHuruf(jumlah) {
             const huruf = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
@@ -58,7 +54,7 @@
         }
 
         function buatSoal() {
-            for (let i = 0; i < 30; i++) {
+            for (let i = 0; i < 50; i++) {
                 let kolomUtama = acakHuruf(5);
                 let hilangIndex = Math.floor(Math.random() * 5);
                 let hurufYangHilang = kolomUtama[hilangIndex];
@@ -72,9 +68,9 @@
             const elemen = document.getElementById(id);
             const isi = acak ? acakArray(data) : data;
             elemen.innerHTML = isi
-                .filter((h) => h !== "") // Menghapus data kosong
+                .filter((h) => h !== "")
                 .map((h) =>
-                    `<div class="p-4 bg-gray-200 text-center font-bold text-xl">${h}</div>`
+                    `<div class="p-2 bg-gray-200 text-center font-bold text-xl">${h}</div>`
                 ).join('');
         }
 
@@ -85,39 +81,47 @@
             ).join('');
         }
 
-        function tampilkanPilihan(id, hurufYangHilang) {
+        function tampilkanPilihan(id, hurufYangHilang, index) {
             const elemen = document.getElementById(id);
-            elemen.innerHTML = ["A", "B", "C", "D", "E"].map((l, index) =>
-                `<button onclick="pilihHuruf('${hurufYangHilang}', '${questions[currentQuestion].kolomUtama[index]}')" class="p-4 bg-gray-300 text-center font-bold text-xl cursor-pointer hover:bg-gray-400">${l}</button>`
+            elemen.innerHTML = ["A", "B", "C", "D", "E"].map((l, idx) =>
+                `<button onclick="pilihHuruf('${hurufYangHilang}', '${questions[index].kolomUtama[idx]}', ${index}, '${l}')" class="p-2 bg-gray-300 text-center font-bold text-sm cursor-pointer hover:bg-gray-400">${l}</button>`
             ).join('');
         }
 
         function tampilkanSoal() {
-            if (currentQuestion >= questions.length) {
-                clearInterval(timerInterval);
-                document.getElementById("quiz-container").innerHTML = `
-                    <h2 class="text-xl font-bold text-center mb-4">Hasil Akhir</h2>
-                    <p class="text-center text-lg">Jawaban Benar: ${correctAnswers}</p>
-                    <p class="text-center text-lg">Jawaban Salah: ${wrongAnswers}</p>
-                    <p class="text-center text-lg">Soal Tidak Terjawab: ${unansweredQuestions}</p>
-                    <button onclick="resetQuiz()" class="mt-4 px-6 py-2 bg-blue-500 text-white font-bold rounded hover:bg-blue-600">
-                        Reset Quiz
-                    </button>
+            const soalContainer = document.getElementById("soal-container");
+            soalContainer.innerHTML = ""; // Reset isi soal-container
+
+            for (let i = 0; i < 50; i++) { // Menampilkan 50 soal
+                const { kolomUtama, kolomKedua, hurufYangHilang } = questions[i];
+                const soalElement = document.createElement("div");
+                soalElement.classList.add("mb-4", "border", "p-4", "rounded", "shadow-md", "bg-gray-50");
+
+                // Menampilkan soal
+                soalElement.innerHTML = `
+                    <h3 class="text-sm font-semibold mb-2">Soal ${i + 1}</h3>
+                    <div id="kolom-utama-${i}" class="grid grid-cols-5 gap-2 mb-2"></div>
+                    <div id="kolom-label-${i}" class="grid grid-cols-5 gap-2 mb-2"></div>
+                    <div id="kolom-kedua-${i}" class="grid grid-cols-5 gap-2 mb-2"></div>
+                    <div class="text-center font-semibold mb-4">Pilih huruf yang hilang:</div>
+                    <div id="pilihan-jawaban-${i}" class="grid grid-cols-5 gap-2"></div>
+                    <p id="feedback-${i}" class="text-center font-bold mt-2"></p>
                 `;
-                return;
+
+                soalContainer.appendChild(soalElement);
+
+                // Tampilkan kolom dan pilihan untuk setiap soal
+                tampilkanKolom(`kolom-utama-${i}`, kolomUtama);
+                tampilkanLabel(`kolom-label-${i}`);
+                tampilkanKolom(`kolom-kedua-${i}`, kolomKedua, true); // Acak kolom kedua
+                tampilkanPilihan(`pilihan-jawaban-${i}`, hurufYangHilang, i);
             }
 
-            const { kolomUtama, kolomKedua, hurufYangHilang } = questions[currentQuestion];
-            document.getElementById("soal-label").textContent = `Soal ${currentQuestion + 1}`;
-            tampilkanKolom("kolom-utama", kolomUtama);
-            tampilkanLabel("kolom-label");
-            tampilkanKolom("kolom-kedua", kolomKedua, true); // Acak kolom kedua
-            tampilkanPilihan("pilihan-jawaban", hurufYangHilang);
             startTimer();
         }
 
         function startTimer() {
-            detik = 30; // 1 menit
+            detik = 60; // 1 menit
             updateTimerDisplay();
             if (countdown) { // Cek jika ada interval yang berjalan
                 clearInterval(countdown); // Hentikan interval yang sebelumnya
@@ -126,10 +130,8 @@
                 detik--;
                 updateTimerDisplay();
                 if (detik < 0) {
-                    unansweredQuestions++; // Jika waktu habis dan soal belum terjawab
                     clearInterval(countdown);
-                    currentQuestion++;
-                    tampilkanSoal();
+                    endQuiz();
                 }
             }, 1000);
         }
@@ -140,23 +142,42 @@
             document.getElementById("timer").textContent = `${menit}:${detikFormat}`;
         }
 
-        function pilihHuruf(jawabanBenar, jawabanPilih) {
-            const feedback = document.getElementById("feedback");
-            if (jawabanBenar === jawabanPilih) {
-                correctAnswers++;
-                feedback.textContent = `Benar!`;
-                feedback.className = "text-green-500";
-            } else {
-                wrongAnswers++;
-                feedback.textContent = `Salah! Coba lagi.`;
-                feedback.className = "text-red-500";
+        function pilihHuruf(jawabanBenar, jawabanPilih, index, label) {
+            const soalElement = document.getElementById(`pilihan-jawaban-${index}`).children;
+
+            // Menghilangkan highlight dan mengaktifkan semua pilihan jawaban
+            for (let i = 0; i < soalElement.length; i++) {
+                soalElement[i].classList.remove('bg-blue-500', 'text-white');
+                soalElement[i].disabled = false;
             }
-            currentQuestion++;
-            setTimeout(() => {
-                feedback.textContent = "";
-                tampilkanSoal();
-            }, 1000);
+
+            // Menandai jawaban yang dipilih
+            soalElement[label.charCodeAt(0) - 65].classList.add('bg-blue-500', 'text-white');
+
+            // Menyimpan jawaban yang dipilih
+            questions[index].chosenAnswer = jawabanPilih;
         }
+
+
+        function endQuiz() {
+            // Tampilkan hasil akhir setelah waktu habis
+            let correctAnswers = 0;
+            questions.forEach((question, index) => {
+                if (question.chosenAnswer === question.hurufYangHilang) {
+                    correctAnswers++;
+                }
+            });
+
+            document.getElementById("quiz-container").innerHTML = `
+        <h2 class="text-xl font-bold text-center mb-4">Hasil Akhir</h2>
+        <p class="text-center text-lg">Quiz Selesai!</p>
+        <p class="text-center text-lg">Jawaban Benar: ${correctAnswers} / 50</p>
+        <button onclick="resetQuiz()" class="mt-4 px-6 py-2 bg-blue-500 text-white font-bold rounded hover:bg-blue-600">
+            Reset Quiz
+        </button>
+    `;
+        }
+
 
         function resetQuiz() {
             window.location.reload(); // Refresh halaman untuk reset quiz
