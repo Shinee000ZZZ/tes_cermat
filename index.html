@@ -16,25 +16,31 @@
             <div id="timer" class="text-xl font-semibold text-gray-700">01:00</div>
         </div>
 
-        <h2 id="soal-label" class="text-lg font-bold text-center mb-2"></h2>
+        <!-- Keterangan Ronde -->
+        <h2 class="text-lg font-bold text-center mb-2" id="round-info">Ronde 1</h2>
 
-        <!-- Mengubah grid menjadi 3 kolom per baris -->
-        <div id="soal-container"
-            class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-4 p-4 overflow-auto"
+        <!-- Kolom Utama -->
+        <div id="kolom-utama" class="grid grid-cols-5 gap-2 mb-4 p-4 bg-gray-100 rounded"></div>
+
+        <!-- Daftar Soal -->
+        <div id="soal-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 p-4 overflow-auto"
             style="max-height: 80vh;"></div>
         <p id="feedback" class="text-center font-bold mt-4"></p>
-        <button id="reset-button" class="mt-4 px-6 py-2 bg-blue-500 text-white font-bold rounded hover:bg-blue-600"
-            style="display: none;">
-            Reset Quiz
-        </button>
+
+        <div class="flex justify-center mt-4 w-full md:w-auto">
+            <button id="reset-button" style="display: none;" class="px-6 py-2 bg-blue-500 text-white font-bold rounded hover:bg-blue-600">
+                Reset Quiz
+            </button>
+        </div>
     </div>
 
     <script>
         let detik = 0;
+        let ronde = 1;
         let questions = [];
-        let timerInterval;
+        let kolomUtama = [];
         let countdown;
-        let answeredQuestions = 0;
+        let rondeResults = [];
 
         function acakHuruf(jumlah) {
             const huruf = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
@@ -54,14 +60,55 @@
         }
 
         function buatSoal() {
+            kolomUtama = acakHuruf(5);
+
             for (let i = 0; i < 50; i++) {
-                let kolomUtama = acakHuruf(5);
                 let hilangIndex = Math.floor(Math.random() * 5);
                 let hurufYangHilang = kolomUtama[hilangIndex];
                 let kolomKedua = [...kolomUtama];
                 kolomKedua[hilangIndex] = "";
-                questions.push({ kolomUtama, kolomKedua, hurufYangHilang });
+
+                questions.push({
+                    kolomKedua,
+                    hurufYangHilang,
+                    chosenAnswer: null,
+                });
             }
+        }
+
+        function tampilkanKolomUtama() {
+            const elemen = document.getElementById("kolom-utama");
+            elemen.innerHTML = kolomUtama
+                .map((h) => `
+            <div class="flex justify-center items-center p-4 bg-white text-center font-medium text-lg border rounded shadow">
+                ${h}
+            </div>
+        `).join('');
+        }
+
+        function tampilkanSoal() {
+            const soalContainer = document.getElementById("soal-container");
+            soalContainer.innerHTML = "";
+
+            for (let i = 0; i < 50; i++) {
+                const { kolomKedua, hurufYangHilang } = questions[i];
+                const soalElement = document.createElement("div");
+                soalElement.classList.add("border", "p-4", "rounded", "shadow-md", "bg-gray-50");
+
+                soalElement.innerHTML = `
+                    <h3 class="text-sm font-semibold mb-2">Soal ${i + 1}</h3>
+                    <div id="kolom-kedua-${i}" class="grid grid-cols-5 gap-2 mb-2"></div>
+                    <div class="text-center font-semibold mb-4">Pilih huruf yang hilang:</div>
+                    <div id="pilihan-jawaban-${i}" class="grid grid-cols-5 gap-2"></div>
+                `;
+
+                soalContainer.appendChild(soalElement);
+
+                tampilkanKolom(`kolom-kedua-${i}`, kolomKedua, true);
+                tampilkanPilihan(`pilihan-jawaban-${i}`, hurufYangHilang, i);
+            }
+
+            startTimer();
         }
 
         function tampilkanKolom(id, data, acak = false) {
@@ -74,64 +121,38 @@
                 ).join('');
         }
 
-        function tampilkanLabel(id) {
-            const elemen = document.getElementById(id);
-            elemen.innerHTML = ["A", "B", "C", "D", "E"].map((l) =>
-                `<div class="p-2 text-center text-lg font-bold">${l}</div>`
-            ).join('');
-        }
-
         function tampilkanPilihan(id, hurufYangHilang, index) {
             const elemen = document.getElementById(id);
-            elemen.innerHTML = ["A", "B", "C", "D", "E"].map((l, idx) =>
-                `<button onclick="pilihHuruf('${hurufYangHilang}', '${questions[index].kolomUtama[idx]}', ${index}, '${l}')" class="p-2 bg-gray-300 text-center font-bold text-sm cursor-pointer hover:bg-gray-400">${l}</button>`
+            elemen.innerHTML = acakArray(kolomUtama).map((huruf, i) =>
+                `<button 
+                    onclick="pilihHuruf('${hurufYangHilang}', '${huruf}', ${index}, '${String.fromCharCode(65 + i)}')"
+                    class="p-2 bg-gray-300 text-center font-bold text-sm cursor-pointer hover:bg-gray-400">
+                    ${huruf}
+                </button>`
             ).join('');
         }
 
-        function tampilkanSoal() {
-            const soalContainer = document.getElementById("soal-container");
-            soalContainer.innerHTML = ""; // Reset isi soal-container
+        function pilihHuruf(jawabanBenar, jawabanPilih, index, label) {
+            const soalElement = document.getElementById(`pilihan-jawaban-${index}`).children;
 
-            for (let i = 0; i < 50; i++) { // Menampilkan 50 soal
-                const { kolomUtama, kolomKedua, hurufYangHilang } = questions[i];
-                const soalElement = document.createElement("div");
-                soalElement.classList.add("mb-4", "border", "p-4", "rounded", "shadow-md", "bg-gray-50");
-
-                // Menampilkan soal
-                soalElement.innerHTML = `
-                    <h3 class="text-sm font-semibold mb-2">Soal ${i + 1}</h3>
-                    <div id="kolom-utama-${i}" class="grid grid-cols-5 gap-2 mb-2"></div>
-                    <div id="kolom-label-${i}" class="grid grid-cols-5 gap-2 mb-2"></div>
-                    <div id="kolom-kedua-${i}" class="grid grid-cols-5 gap-2 mb-2"></div>
-                    <div class="text-center font-semibold mb-4">Pilih huruf yang hilang:</div>
-                    <div id="pilihan-jawaban-${i}" class="grid grid-cols-5 gap-2"></div>
-                    <p id="feedback-${i}" class="text-center font-bold mt-2"></p>
-                `;
-
-                soalContainer.appendChild(soalElement);
-
-                // Tampilkan kolom dan pilihan untuk setiap soal
-                tampilkanKolom(`kolom-utama-${i}`, kolomUtama);
-                tampilkanLabel(`kolom-label-${i}`);
-                tampilkanKolom(`kolom-kedua-${i}`, kolomKedua, true); // Acak kolom kedua
-                tampilkanPilihan(`pilihan-jawaban-${i}`, hurufYangHilang, i);
+            for (let i = 0; i < soalElement.length; i++) {
+                soalElement[i].classList.remove('bg-blue-500', 'text-white');
+                soalElement[i].disabled = false;
             }
 
-            startTimer();
+            soalElement[label.charCodeAt(0) - 65].classList.add('bg-blue-500', 'text-white');
+            questions[index].chosenAnswer = jawabanPilih;
         }
 
         function startTimer() {
-            detik = 60; // 1 menit
+            detik = 0;
             updateTimerDisplay();
-            if (countdown) { // Cek jika ada interval yang berjalan
-                clearInterval(countdown); // Hentikan interval yang sebelumnya
-            }
             countdown = setInterval(() => {
                 detik--;
                 updateTimerDisplay();
                 if (detik < 0) {
                     clearInterval(countdown);
-                    endQuiz();
+                    endRound();
                 }
             }, 1000);
         }
@@ -142,48 +163,68 @@
             document.getElementById("timer").textContent = `${menit}:${detikFormat}`;
         }
 
-        function pilihHuruf(jawabanBenar, jawabanPilih, index, label) {
-            const soalElement = document.getElementById(`pilihan-jawaban-${index}`).children;
+        function endRound() {
+            rondeResults.push(calculateRoundResults());
 
-            // Menghilangkan highlight dan mengaktifkan semua pilihan jawaban
-            for (let i = 0; i < soalElement.length; i++) {
-                soalElement[i].classList.remove('bg-blue-500', 'text-white');
-                soalElement[i].disabled = false;
+            if (ronde < 5) {
+                ronde++;
+                questions = [];
+                kolomUtama = [];
+                buatSoal();
+                document.getElementById("round-info").textContent = `Ronde ${ronde}`;
+                tampilkanKolomUtama();
+                tampilkanSoal();
+            } else {
+                showFinalResults();
             }
-
-            // Menandai jawaban yang dipilih
-            soalElement[label.charCodeAt(0) - 65].classList.add('bg-blue-500', 'text-white');
-
-            // Menyimpan jawaban yang dipilih
-            questions[index].chosenAnswer = jawabanPilih;
         }
 
-
-        function endQuiz() {
-            // Tampilkan hasil akhir setelah waktu habis
+        function calculateRoundResults() {
             let correctAnswers = 0;
-            questions.forEach((question, index) => {
-                if (question.chosenAnswer === question.hurufYangHilang) {
+            let wrongAnswers = 0;
+            let unanswered = 0;
+
+            questions.forEach((question) => {
+                if (question.chosenAnswer === null) {
+                    unanswered++;
+                } else if (question.chosenAnswer === question.hurufYangHilang) {
                     correctAnswers++;
+                } else {
+                    wrongAnswers++;
                 }
             });
 
-            document.getElementById("quiz-container").innerHTML = `
-        <h2 class="text-xl font-bold text-center mb-4">Hasil Akhir</h2>
-        <p class="text-center text-lg">Quiz Selesai!</p>
-        <p class="text-center text-lg">Jawaban Benar: ${correctAnswers} / 50</p>
-        <button onclick="resetQuiz()" class="mt-4 px-6 py-2 bg-blue-500 text-white font-bold rounded hover:bg-blue-600">
-            Reset Quiz
-        </button>
-    `;
+            return { correctAnswers, wrongAnswers, unanswered };
         }
 
+        function showFinalResults() {
+            document.getElementById("quiz-container").innerHTML = `
+                <h2 class="text-xl font-bold text-center mb-4">Hasil Akhir</h2>
+                <p class="text-center text-lg">Quiz Selesai!</p>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 p-4">
+                    ${rondeResults.map((result, index) => `
+                        <div class="border p-4 rounded shadow-md bg-gray-50">
+                            <h3 class="font-semibold mb-2">Ronde ${index + 1}</h3>
+                            <p>Benar: ${result.correctAnswers}</p>
+                            <p>Salah: ${result.wrongAnswers}</p>
+                            <p>Tidak Terjawab: ${result.unanswered}</p>
+                        </div>
+                    `).join('')}
+                </div>
+                <div class="flex justify-center items-center mt-4">
+                    <button onclick="resetQuiz()" class="px-6 py-2 bg-blue-500 text-white font-bold rounded hover:bg-blue-600">
+                        Reset Quiz
+                    </button>
+                </div>
+            `;
+        }
 
         function resetQuiz() {
-            window.location.reload(); // Refresh halaman untuk reset quiz
+            window.location.reload();
         }
 
         buatSoal();
+        tampilkanKolomUtama();
         tampilkanSoal();
     </script>
 </body>
