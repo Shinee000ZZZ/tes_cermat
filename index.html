@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz Tes Kecermatan</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="bg-gray-100">
+    <div class="bg-white p-4 rounded shadow-lg max-w-full w-full overflow-auto fixed top-0 left-0 right-0 bottom-0"
+        id="quiz-container" style="margin-top: 20px;">
+        <div class="flex justify-between items-center mb-4">
+            <h1 class="text-2xl font-bold">Tes Kecermatan</h1>
+            <div id="timer" class="text-xl font-semibold text-gray-700">01:00</div>
+        </div>
+
+        <!-- Keterangan Ronde -->
+        <h2 class="text-lg font-bold text-center mb-2" id="round-info">Ronde 1</h2>
+
+        <!-- Kolom Utama -->
+        <div id="kolom-utama" class="grid grid-cols-5 gap-2 mb-4 p-4 bg-gray-100 rounded"></div>
+
+        <!-- Daftar Soal -->
+        <div id="soal-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 p-4 overflow-auto"
+            style="max-height: 80vh;"></div>
+        <p id="feedback" class="text-center font-bold mt-4"></p>
+
+        <div class="flex justify-center mt-4 w-full md:w-auto">
+            <button id="start-button" class="px-6 py-2 bg-green-500 text-white font-bold rounded hover:bg-green-600">
+                Mulai Tes
+            </button>
+            <button id="reset-button" style="display: none;"
+                class="px-6 py-2 bg-blue-500 text-white font-bold rounded hover:bg-blue-600">
+                Reset Quiz
+            </button>
+        </div>
+
+        <audio id="timer-sound" src="censor-beep-01.wav" preload="auto"></audio>
+
+    </div>
+
+    <script>
+        let detik = 0;
+        let ronde = 1;
+        let questions = [];
+        let kolomUtama = [];
+        let countdown;
+        let rondeResults = [];
+
+        // Fungsi untuk acak huruf
+        function acakHuruf(jumlah) {
+            const huruf = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+            let hasil = [];
+            while (hasil.length < jumlah) {
+                const randomHuruf = huruf[Math.floor(Math.random() * huruf.length)];
+                if (!hasil.includes(randomHuruf)) hasil.push(randomHuruf);
+            }
+            return hasil;
+        }
+
+        function acakArray(arr) {
+            return arr
+                .map((value) => ({ value, sort: Math.random() }))
+                .sort((a, b) => a.sort - b.sort)
+                .map(({ value }) => value);
+        }
+
+        function buatSoal() {
+            kolomUtama = acakHuruf(5);
+
+            for (let i = 0; i < 50; i++) {
+                let hilangIndex = Math.floor(Math.random() * 5);
+                let hurufYangHilang = kolomUtama[hilangIndex];
+                let kolomKedua = [...kolomUtama];
+                kolomKedua[hilangIndex] = "";
+
+                questions.push({
+                    kolomKedua,
+                    hurufYangHilang,
+                    chosenAnswer: null,
+                });
+            }
+        }
+
+        function tampilkanKolomUtama() {
+            const elemen = document.getElementById("kolom-utama");
+            elemen.innerHTML = kolomUtama
+                .map((h) => `
+            <div class="flex justify-center items-center p-4 bg-white text-center font-medium text-lg border rounded shadow">
+                ${h}
+            </div>
+        `).join('');
+        }
+
+        function tampilkanSoal() {
+            const soalContainer = document.getElementById("soal-container");
+            soalContainer.innerHTML = "";
+
+            for (let i = 0; i < 50; i++) {
+                const { kolomKedua, hurufYangHilang } = questions[i];
+                const soalElement = document.createElement("div");
+                soalElement.classList.add("border", "p-4", "rounded", "shadow-md", "bg-gray-50");
+
+                soalElement.innerHTML = `
+                    <h3 class="text-sm font-semibold mb-2">Soal ${i + 1}</h3>
+                    <div id="kolom-kedua-${i}" class="grid grid-cols-5 gap-2 mb-2"></div>
+                    <div class="text-center font-semibold mb-4">Pilih huruf yang hilang:</div>
+                    <div id="pilihan-jawaban-${i}" class="grid grid-cols-5 gap-2"></div>
+                `;
+
+                soalContainer.appendChild(soalElement);
+
+                tampilkanKolom(`kolom-kedua-${i}`, kolomKedua, true);
+                tampilkanPilihan(`pilihan-jawaban-${i}`, hurufYangHilang, i);
+            }
+
+            startTimer();
+        }
+
+        function tampilkanKolom(id, data, acak = false) {
+            const elemen = document.getElementById(id);
+            const isi = acak ? acakArray(data) : data;
+            elemen.innerHTML = isi
+                .filter((h) => h !== "")
+                .map((h) =>
+                    `<div class="p-2 bg-gray-200 text-center font-bold text-xl">${h}</div>`
+                ).join('');
+        }
+
+        function tampilkanPilihan(id, hurufYangHilang, index) {
+            const elemen = document.getElementById(id);
+            elemen.innerHTML = acakArray(kolomUtama).map((huruf, i) =>
+                `<button 
+                    onclick="pilihHuruf('${hurufYangHilang}', '${huruf}', ${index}, '${String.fromCharCode(65 + i)}')"
+                    class="p-2 bg-gray-300 text-center font-bold text-sm cursor-pointer hover:bg-gray-400">
+                    ${huruf}
+                </button>`
+            ).join('');
+        }
+
+        function pilihHuruf(jawabanBenar, jawabanPilih, index, label) {
+            const soalElement = document.getElementById(`pilihan-jawaban-${index}`).children;
+
+            for (let i = 0; i < soalElement.length; i++) {
+                soalElement[i].classList.remove('bg-blue-500', 'text-white');
+                soalElement[i].disabled = false;
+            }
+
+            soalElement[label.charCodeAt(0) - 65].classList.add('bg-blue-500', 'text-white');
+            questions[index].chosenAnswer = jawabanPilih;
+        }
+
+        function startTimer() {
+            detik = 60;
+            updateTimerDisplay();
+            countdown = setInterval(() => {
+                detik--;
+                updateTimerDisplay();
+
+                // Jika timer mencapai 5 detik atau kurang, putar suara
+                if (detik <= 5 && detik > 0) {
+                    playTimerSound();
+                }
+
+                if (detik < 0) {
+                    clearInterval(countdown);
+                    endRound();
+                }
+            }, 1000);
+        }
+
+
+        function playTimerSound() {
+            const timerSound = document.getElementById("timer-sound");
+            timerSound.play();
+        }
+
+        function updateTimerDisplay() {
+            const menit = String(Math.floor(detik / 60)).padStart(2, "0");
+            const detikFormat = String(detik % 60).padStart(2, "0");
+            document.getElementById("timer").textContent = `${menit}:${detikFormat}`;
+        }
+
+        function endRound() {
+            rondeResults.push(calculateRoundResults());
+
+            if (ronde < 5) {
+                ronde++;
+                questions = [];
+                kolomUtama = [];
+                buatSoal();
+                document.getElementById("round-info").textContent = `Ronde ${ronde}`;
+                tampilkanKolomUtama();
+                tampilkanSoal();
+
+                // Scroll ke atas di dalam soal container
+                scrollSoalContainer();  // Menambahkan scroll ke atas untuk soal container
+            } else {
+                showFinalResults();
+            }
+        }
+
+        function scrollSoalContainer() {
+            const soalContainer = document.getElementById("soal-container");
+            soalContainer.scrollTop = 0; // Mengatur posisi scroll ke atas
+        }
+
+        function calculateRoundResults() {
+            let correctAnswers = 0;
+            let wrongAnswers = 0;
+            let unanswered = 0;
+
+            questions.forEach((question) => {
+                if (question.chosenAnswer === null) {
+                    unanswered++;
+                } else if (question.chosenAnswer === question.hurufYangHilang) {
+                    correctAnswers++;
+                } else {
+                    wrongAnswers++;
+                }
+            });
+
+            return { correctAnswers, wrongAnswers, unanswered };
+        }
+
+        function showFinalResults() {
+            document.getElementById("quiz-container").innerHTML = `
+                <h2 class="text-xl font-bold text-center mb-4">Hasil Akhir</h2>
+                <p class="text-center text-lg">Quiz Selesai!</p>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 p-4">
+                    ${rondeResults.map((result, index) => `
+                        <div class="border p-4 rounded shadow-md bg-gray-50">
+                            <h3 class="font-semibold mb-2">Ronde ${index + 1}</h3>
+                            <p>Benar: ${result.correctAnswers}</p>
+                            <p>Salah: ${result.wrongAnswers}</p>
+                            <p>Tidak Terjawab: ${result.unanswered}</p>
+                        </div>
+                    `).join('')}
+                </div>
+                <div class="flex justify-center items-center mt-4">
+                    <button onclick="resetQuiz()" class="px-6 py-2 bg-blue-500 text-white font-bold rounded hover:bg-blue-600">
+                        Reset Quiz
+                    </button>
+                </div>
+            `;
+        }
+
+        function resetQuiz() {
+            window.location.reload();
+        }
+
+        // Tambahkan event listener pada tombol Mulai Tes
+        document.getElementById("start-button").addEventListener("click", function () {
+            this.style.display = "none";  // Menyembunyikan tombol Mulai Tes
+            buatSoal();
+            tampilkanKolomUtama();
+            tampilkanSoal();
+        });
+
+    </script>
+</body>
+
+</html>
