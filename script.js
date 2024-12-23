@@ -40,6 +40,12 @@ function buatSoal() {
         let kolomKedua = [...kolomUtama];
         kolomKedua[hilangIndex] = "";
 
+        // Acak posisi kolom kedua
+        kolomKedua = kolomKedua
+            .map((value) => ({ value, sort: Math.random() })) // Tambahkan nilai acak untuk setiap elemen
+            .sort((a, b) => a.sort - b.sort) // Urutkan berdasarkan nilai acak
+            .map(({ value }) => value); // Kembalikan ke array nilai aslinya
+
         questions.push({
             kolomKedua,
             hurufYangHilang,
@@ -47,6 +53,7 @@ function buatSoal() {
         });
     }
 }
+
 
 function tampilkanKolomUtama() {
     const elemen = document.getElementById("kolom-utama");
