@@ -1,6 +1,6 @@
 let detik = 0;
 let ronde = 1;
-const maxRonde = 5;
+const maxRonde = 10;
 let questions = [];
 let kolomUtama = [];
 let countdown;
@@ -124,7 +124,7 @@ function pilihHuruf(jawabanBenar, jawabanPilih, index) {
 
 
 function startTimer() {
-    detik = 1;
+    detik = 60;
     updateTimerDisplay();
     countdown = setInterval(() => {
         detik--;
