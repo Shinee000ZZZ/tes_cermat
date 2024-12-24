@@ -1,6 +1,6 @@
 let detik = 0;
 let ronde = 1;
-const maxRonde = 10;
+const maxRonde = 1;
 let questions = [];
 let kolomUtama = [];
 let countdown;
