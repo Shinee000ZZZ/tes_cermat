@@ -16,15 +16,10 @@
             <div id="timer" class="text-xl font-semibold text-[#e0e7ff]">01:00</div>
         </div>
 
-        <!-- Keterangan Ronde -->
         <h2 class="text-lg font-bold text-center mb-2 text-[#ffffff]" id="round-info">Ronde 1</h2>
 
-        <!-- Wadah untuk Kolom Utama dan Keterangan ABCDE -->
         <div class="bg-[#037c69] p-4 rounded mb-4">
-            <!-- Kolom Utama -->
             <div id="kolom-utama" class="grid grid-cols-5 gap-2 mb-2 p-4 bg-[#003233] rounded"></div>
-
-            <!-- Keterangan ABCDE -->
             <div class="grid grid-cols-5 text-center text-sm font-semibold text-white">
                 <div>A</div>
                 <div>B</div>
@@ -34,11 +29,9 @@
             </div>
         </div>
 
-        <!-- Soal -->
         <div id="soal-container" class="p-4 bg-[#003233] border border-2 lg:mt-16 rounded"></div>
     </div>
 
-    <!-- Halaman Awal -->
     <div id="start-page" class="flex flex-col justify-center items-center h-screen bg-[#003233]">
         <h1 class="text-3xl font-bold mb-4 text-center text-[#ffffff]">Selamat Datang di Tes Kecermatan</h1>
         <button onclick="startQuiz()" class="bg-green-600 text-white px-4 py-2 rounded shadow hover:bg-green-800">
@@ -46,9 +39,8 @@
         </button>
     </div>
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/0.4.1/html2canvas.min.js"></script>
     <script src="script.js"></script>
 </body>
-
-
 
 </html>

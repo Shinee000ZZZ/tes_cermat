@@ -20,7 +20,6 @@ function resetQuiz() {
     location.reload(); // Reload halaman
 }
 
-
 function acakHuruf(jumlah) {
     const huruf = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
     let hasil = [];
@@ -40,11 +39,10 @@ function buatSoal() {
         let kolomKedua = [...kolomUtama];
         kolomKedua[hilangIndex] = "";
 
-        // Acak posisi kolom kedua
         kolomKedua = kolomKedua
-            .map((value) => ({ value, sort: Math.random() })) // Tambahkan nilai acak untuk setiap elemen
-            .sort((a, b) => a.sort - b.sort) // Urutkan berdasarkan nilai acak
-            .map(({ value }) => value); // Kembalikan ke array nilai aslinya
+            .map((value) => ({ value, sort: Math.random() }))
+            .sort((a, b) => a.sort - b.sort)
+            .map(({ value }) => value);
 
         questions.push({
             kolomKedua,
@@ -53,7 +51,6 @@ function buatSoal() {
         });
     }
 }
-
 
 function tampilkanKolomUtama() {
     const elemen = document.getElementById("kolom-utama");
@@ -114,7 +111,6 @@ function tampilkanPilihan(id, index) {
 }
 
 function pilihHuruf(jawabanBenar, jawabanPilih, index) {
-    // Tambahkan animasi pada tombol yang diklik
     const buttons = document.querySelectorAll(`#pilihan-jawaban button`);
     buttons.forEach(button => {
         if (button.textContent === jawabanPilih) {
@@ -122,7 +118,6 @@ function pilihHuruf(jawabanBenar, jawabanPilih, index) {
         }
     });
 
-    // Simpan jawaban yang dipilih
     questions[index].chosenAnswer = jawabanPilih;
 
     setTimeout(() => {
@@ -133,12 +128,11 @@ function pilihHuruf(jawabanBenar, jawabanPilih, index) {
             clearInterval(countdown);
             endRound();
         }
-    }, 300); // Delay agar animasi selesai sebelum berpindah soal
+    }, 300);
 }
 
-
 function startTimer() {
-    detik = 60;
+    detik = 1;
     updateTimerDisplay();
     countdown = setInterval(() => {
         detik--;
@@ -187,17 +181,18 @@ function showFinalResults() {
     const quizContainer = document.getElementById("quiz-container");
     quizContainer.innerHTML = `
         <h2 class="text-xl font-bold text-center mb-4">Hasil Akhir</h2>
-        ${rondeResults.map((result, index) => `
-            <div class="border p-4 rounded shadow-md bg-gray-50 mb-4 text-black">
-                <h3 class="font-semibold mb-2">Ronde ${index + 1}</h3>
-                <p>Benar: ${result.benar}</p>
-                <p>Salah: ${result.salah}</p>
-                <p>Tidak Terjawab: ${result.tidakTerjawab}</p>
-            </div>
-        `).join('')}
-        <button onclick="resetQuiz()" class="bg-red-500 text-white px-4 py-2 rounded shadow hover:bg-red-600">
-            Reset Quiz
+        <div class="grid grid-cols-4 gap-2">
+            ${rondeResults.map((result, index) => `
+                <div class="border p-2 rounded shadow-md text-start">
+                    <div class="font-semibold">Ronde ${index + 1}</div>
+                    <div>Benar: ${result.benar}</div>
+                    <div>Salah: ${result.salah}</div>
+                    <div>Tidak Terjawab: ${result.tidakTerjawab}</div>
+                </div>
+            `).join('')}
+        </div>
+        <button onclick="resetQuiz()" class="bg-red-600 text-white py-2 px-4 rounded shadow mt-4">
+            Restart Quiz
         </button>
     `;
 }
-
