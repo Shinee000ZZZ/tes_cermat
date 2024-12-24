@@ -188,7 +188,7 @@ function showFinalResults() {
     quizContainer.innerHTML = `
         <h2 class="text-xl font-bold text-center mb-4">Hasil Akhir</h2>
         ${rondeResults.map((result, index) => `
-            <div class="border p-4 rounded shadow-md bg-gray-50 mb-4">
+            <div class="border p-4 rounded shadow-md bg-gray-50 mb-4 text-black">
                 <h3 class="font-semibold mb-2">Ronde ${index + 1}</h3>
                 <p>Benar: ${result.benar}</p>
                 <p>Salah: ${result.salah}</p>
