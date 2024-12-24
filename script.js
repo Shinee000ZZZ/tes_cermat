@@ -181,9 +181,9 @@ function showFinalResults() {
     const quizContainer = document.getElementById("quiz-container");
     quizContainer.innerHTML = `
         <h2 class="text-xl font-bold text-center mb-4">Hasil Akhir</h2>
-        <div class="grid grid-cols-4 gap-2">
+        <div class="grid grid-cols-5 gap-2">
             ${rondeResults.map((result, index) => `
-                <div class="border p-2 rounded shadow-md text-start">
+                <div class="border p-2 rounded shadow-md text-center">
                     <div class="font-semibold">Ronde ${index + 1}</div>
                     <div>Benar: ${result.benar}</div>
                     <div>Salah: ${result.salah}</div>
