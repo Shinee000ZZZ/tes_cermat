@@ -104,7 +104,7 @@ function tampilkanPilihan(id, index) {
 
     elemen.innerHTML = kolomUtamaMap.map((option) =>
         `<button onclick="pilihHuruf('${soal.hurufYangHilang}', '${option.huruf}', ${index})"
-        class="p-3 bg-green-500 text-white font-bold text-sm cursor-pointer rounded hover:bg-green-200 active:scale-90 transition-transform">
+        class="p-4 md:px-4 md:py-4 lg:px-3 lg:py-5 xl:px-3 xl:py-5 bg-green-500 text-center text-white font-bold text-lg cursor-pointer rounded hover:bg-green-200 active:scale-90 transition-transform">
         ${option.urutan}
     </button>`
     ).join('');
