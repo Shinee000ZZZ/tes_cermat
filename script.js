@@ -58,7 +58,11 @@ function buatSoal() {
 function tampilkanKolomUtama() {
     const elemen = document.getElementById("kolom-utama");
     elemen.innerHTML = kolomUtama
-        .map((h) => ` <div class="flex justify-center items-center p-4 bg-white text-center font-medium text-lg border rounded shadow">${h}</div>`)
+        .map((h) => `
+            <div class="flex justify-center items-center p-4 bg-green-600 text-white text-center font-medium text-lg rounded shadow">
+                ${h}
+            </div>
+        `)
         .join('');
 }
 
@@ -67,7 +71,7 @@ function tampilkanSoal(index) {
     const { kolomKedua } = questions[index];
 
     soalContainer.innerHTML = ` 
-        <div class="border p-4 rounded shadow-md bg-gray-50">
+        <div class="p-4 bg-[#003233]">
             <h3 class="text-sm font-semibold mb-2">Soal ${index + 1}</h3>
             <div id="kolom-kedua" class="grid grid-cols-5 gap-2 mb-4"></div>
             <div class="text-center font-semibold mb-4">Pilih huruf yang hilang:</div>
@@ -83,7 +87,11 @@ function tampilkanKolom(id, data) {
     const elemen = document.getElementById(id);
     elemen.innerHTML = data
         .filter((h) => h !== "")
-        .map((h) => `<div class="p-2 bg-gray-200 text-center font-bold text-xl">${h}</div>`)
+        .map((h) => `
+            <div class="p-2 bg-green-600 text-white text-center font-bold text-xl rounded">
+                ${h}
+            </div>
+        `)
         .join('');
 }
 
@@ -99,10 +107,9 @@ function tampilkanPilihan(id, index) {
 
     elemen.innerHTML = kolomUtamaMap.map((option) =>
         `<button onclick="pilihHuruf('${soal.hurufYangHilang}', '${option.huruf}', ${index})"
-        class="p-2 bg-gray-300 text-center font-bold text-sm cursor-pointer hover:bg-gray-400 transition-transform transform active:scale-90">
+        class="p-3 bg-green-500 text-white font-bold text-sm cursor-pointer rounded hover:bg-green-200 active:scale-90 transition-transform">
         ${option.urutan}
     </button>`
-
     ).join('');
 }
 
@@ -131,7 +138,7 @@ function pilihHuruf(jawabanBenar, jawabanPilih, index) {
 
 
 function startTimer() {
-    detik = 60;
+    detik = 41;
     updateTimerDisplay();
     countdown = setInterval(() => {
         detik--;
