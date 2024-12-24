@@ -138,7 +138,7 @@ function pilihHuruf(jawabanBenar, jawabanPilih, index) {
 
 
 function startTimer() {
-    detik = 41;
+    detik = 60;
     updateTimerDisplay();
     countdown = setInterval(() => {
         detik--;
