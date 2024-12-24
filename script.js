@@ -132,7 +132,7 @@ function pilihHuruf(jawabanBenar, jawabanPilih, index) {
 }
 
 function startTimer() {
-    detik = 1;
+    detik = 60;
     updateTimerDisplay();
     countdown = setInterval(() => {
         detik--;
