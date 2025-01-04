@@ -1,3 +1,4 @@
+</html>
 <!DOCTYPE html>
 <html lang="en">
 
@@ -9,6 +10,7 @@
 </head>
 
 <body class="bg-[#003233] text-white">
+    <!-- Container untuk Quiz -->
     <div class="bg-[#003233] p-4 rounded shadow-lg max-w-full w-full overflow-auto fixed top-0 left-0 right-0 bottom-0"
         id="quiz-container" style="margin-top: 20px; display: none;">
         <div class="flex justify-between items-center mb-4">
@@ -34,14 +36,28 @@
 
     <audio id="timer-sound" src="censor-beep-01.wav"></audio>
 
+    <!-- Halaman Awal -->
     <div id="start-page" class="flex flex-col justify-center items-center h-screen bg-[#003233]">
         <h1 class="text-3xl font-bold mb-4 text-center text-[#ffffff]">Selamat Datang di Tes Kecermatan</h1>
-        <button onclick="startQuiz()" class="bg-green-600 text-white px-4 py-2 rounded shadow hover:bg-green-800">
+        <button onclick="showQuizOptions()" class="bg-green-600 text-white px-4 py-2 rounded shadow hover:bg-green-800">
             Mulai Quiz
         </button>
     </div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/0.4.1/html2canvas.min.js"></script>
+    <!-- Pilihan Jenis Soal -->
+    <div id="quiz-options" class="hidden flex flex-col justify-center items-center h-screen bg-[#003233]">
+        <h2 class="text-2xl font-bold text-[#ffffff] mb-6">Pilih Jenis Soal</h2>
+        <div class="flex gap-4">
+            <button onclick="startQuiz('huruf')" class="bg-blue-500 text-white px-4 py-2 rounded shadow hover:bg-blue-700">
+                Huruf
+            </button>
+            <button onclick="startQuiz('angka')" class="bg-yellow-500 text-white px-4 py-2 rounded shadow hover:bg-yellow-700">
+                Angka
+            </button>
+        </div>
+    </div>
+
     <script src="script.js"></script>
 </body>
+
 </html>
