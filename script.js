@@ -51,24 +51,28 @@ function buatSoal() {
     kolomUtama = quizType === "huruf" ? acakHuruf(5) : acakAngka(5);
     questions = [];
     for (let i = 0; i < 50; i++) {
-        let hilangIndex = Math.floor(Math.random() * 5);
-        let elemenYangHilang = kolomUtama[hilangIndex];
+        let hilangIndex = Math.floor(Math.random() * 5); // Pilih elemen yang hilang secara acak
+        let elemenYangHilang = kolomUtama[hilangIndex]; // Elemen yang akan hilang
         let kolomKedua = [...kolomUtama];
-        kolomKedua[hilangIndex] = "";
+        kolomKedua[hilangIndex] = ""; // Ganti elemen yang hilang dengan string kosong
 
+        // Acak kolom kedua
         kolomKedua = kolomKedua
             .map((value) => ({ value, sort: Math.random() }))
             .sort((a, b) => a.sort - b.sort)
             .map(({ value }) => value);
 
-        let pilihan = ["A", "B", "C", "D", "E"];
-        pilihan[Math.floor(Math.random() * 5)] = elemenYangHilang;
+        // Opsi jawaban tetap ABCDE
+        const pilihan = ["A", "B", "C", "D", "E"];
+        const jawabanBenarIndex = Math.floor(Math.random() * 5); // Tentukan posisi jawaban benar
+        const opsiJawaban = [...pilihan];
 
         questions.push({
             kolomKedua,
             elemenYangHilang,
-            pilihan,
+            pilihan: opsiJawaban,
             chosenAnswer: null,
+            jawabanIndex: hilangIndex,
         });
     }
 }
@@ -116,23 +120,18 @@ function tampilkanKolom(id, data) {
 function tampilkanPilihan(id, pilihan, index) {
     const elemen = document.getElementById(id);
     const soal = questions[index];
-    elemen.innerHTML = pilihan.map((option) =>
-        `<button onclick="pilihElemen('${soal.elemenYangHilang}', '${option}', ${index})"
+    elemen.innerHTML = pilihan.map((option, opsiIndex) =>
+        `<button onclick="pilihElemen(${soal.jawabanIndex}, ${opsiIndex}, ${index})"
         class="p-4 bg-green-500 text-center text-white font-bold text-lg cursor-pointer rounded hover:bg-green-200 active:scale-90 transition-transform">
         ${option}
     </button>`
     ).join("");
 }
 
-function pilihElemen(jawabanBenar, jawabanPilih, index) {
+function pilihElemen(jawabanIndex, opsiIndex, index) {
     const buttons = document.querySelectorAll(`#pilihan-jawaban button`);
-    buttons.forEach((button) => {
-        if (button.textContent === jawabanPilih) {
-            button.classList.add("animate-bounce");
-        }
-    });
 
-    questions[index].chosenAnswer = jawabanPilih;
+    questions[index].chosenAnswer = opsiIndex;
 
     setTimeout(() => {
         if (currentQuestionIndex < questions.length - 1) {
@@ -172,8 +171,8 @@ function updateTimerDisplay() {
 }
 
 function endRound() {
-    const benar = questions.filter((q) => q.elemenYangHilang === q.chosenAnswer).length;
-    const salah = questions.filter((q) => q.chosenAnswer !== null && q.elemenYangHilang !== q.chosenAnswer).length;
+    const benar = questions.filter((q) => q.jawabanIndex === q.chosenAnswer).length;
+    const salah = questions.filter((q) => q.chosenAnswer !== null && q.jawabanIndex !== q.chosenAnswer).length;
     const tidakTerjawab = questions.filter((q) => q.chosenAnswer === null).length;
 
     rondeResults.push({ benar, salah, tidakTerjawab });
