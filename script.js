@@ -6,10 +6,18 @@ let kolomUtama = [];
 let countdown;
 let currentQuestionIndex = 0;
 let rondeResults = [];
+let quizType = ""; // Menyimpan jenis quiz: "huruf" atau "angka"
 
-function startQuiz() {
-    document.getElementById("start-page").style.display = "none";
+function showQuizOptions() {
+    document.getElementById("start-page").classList.add("hidden");
+    document.getElementById("quiz-options").classList.remove("hidden");
+}
+
+function startQuiz(type) {
+    quizType = type; // Simpan jenis quiz
+    document.getElementById("quiz-options").classList.add("hidden");
     document.getElementById("quiz-container").style.display = "block";
+
     buatSoal();
     tampilkanKolomUtama();
     tampilkanSoal(currentQuestionIndex);
@@ -30,12 +38,21 @@ function acakHuruf(jumlah) {
     return hasil;
 }
 
+function acakAngka(jumlah) {
+    let hasil = [];
+    while (hasil.length < jumlah) {
+        const randomAngka = (Math.floor(Math.random() * 9) + 1).toString(); // Angka antara 1-9
+        if (!hasil.includes(randomAngka)) hasil.push(randomAngka);
+    }
+    return hasil;
+}
+
 function buatSoal() {
-    kolomUtama = acakHuruf(5); // A, B, C, D, E
+    kolomUtama = quizType === "huruf" ? acakHuruf(5) : acakAngka(5);
     questions = [];
     for (let i = 0; i < 50; i++) {
         let hilangIndex = Math.floor(Math.random() * 5);
-        let hurufYangHilang = kolomUtama[hilangIndex];
+        let elemenYangHilang = kolomUtama[hilangIndex];
         let kolomKedua = [...kolomUtama];
         kolomKedua[hilangIndex] = "";
 
@@ -44,9 +61,13 @@ function buatSoal() {
             .sort((a, b) => a.sort - b.sort)
             .map(({ value }) => value);
 
+        let pilihan = ["A", "B", "C", "D", "E"];
+        pilihan[Math.floor(Math.random() * 5)] = elemenYangHilang;
+
         questions.push({
             kolomKedua,
-            hurufYangHilang,
+            elemenYangHilang,
+            pilihan,
             chosenAnswer: null,
         });
     }
@@ -60,24 +81,24 @@ function tampilkanKolomUtama() {
                 ${h}
             </div>
         `)
-        .join('');
+        .join("");
 }
 
 function tampilkanSoal(index) {
     const soalContainer = document.getElementById("soal-container");
-    const { kolomKedua } = questions[index];
+    const { kolomKedua, pilihan } = questions[index];
 
     soalContainer.innerHTML = ` 
         <div class="p-4 bg-[#003233]">
-            <h3 class="text-sm font-semibold mb-2">Soal ${index + 1}</h3>
+            <h3 class="text-sm font-semibold mb-2">Soal ${index + 1}/50</h3>
             <div id="kolom-kedua" class="grid grid-cols-5 gap-2 mb-4"></div>
-            <div class="text-center font-semibold mb-4">Pilih huruf yang hilang:</div>
+            <div class="text-center font-semibold mb-4">Pilih huruf atau angka yang hilang:</div>
             <div id="pilihan-jawaban" class="grid grid-cols-5 gap-2"></div>
         </div>
     `;
 
     tampilkanKolom("kolom-kedua", kolomKedua);
-    tampilkanPilihan("pilihan-jawaban", index);
+    tampilkanPilihan("pilihan-jawaban", pilihan, index);
 }
 
 function tampilkanKolom(id, data) {
@@ -89,30 +110,23 @@ function tampilkanKolom(id, data) {
                 ${h}
             </div>
         `)
-        .join('');
+        .join("");
 }
 
-function tampilkanPilihan(id, index) {
+function tampilkanPilihan(id, pilihan, index) {
     const elemen = document.getElementById(id);
     const soal = questions[index];
-    const kolomUtamaMap = kolomUtama.map((huruf, idx) => {
-        return {
-            huruf: huruf,
-            urutan: String.fromCharCode(65 + idx) // Menyusun A, B, C, D, E berdasarkan urutan kolom
-        };
-    });
-
-    elemen.innerHTML = kolomUtamaMap.map((option) =>
-        `<button onclick="pilihHuruf('${soal.hurufYangHilang}', '${option.huruf}', ${index})"
-        class="p-4 md:px-4 md:py-4 lg:px-3 lg:py-5 xl:px-3 xl:py-5 bg-green-500 text-center text-white font-bold text-lg cursor-pointer rounded hover:bg-green-200 active:scale-90 transition-transform">
-        ${option.urutan}
+    elemen.innerHTML = pilihan.map((option) =>
+        `<button onclick="pilihElemen('${soal.elemenYangHilang}', '${option}', ${index})"
+        class="p-4 bg-green-500 text-center text-white font-bold text-lg cursor-pointer rounded hover:bg-green-200 active:scale-90 transition-transform">
+        ${option}
     </button>`
-    ).join('');
+    ).join("");
 }
 
-function pilihHuruf(jawabanBenar, jawabanPilih, index) {
+function pilihElemen(jawabanBenar, jawabanPilih, index) {
     const buttons = document.querySelectorAll(`#pilihan-jawaban button`);
-    buttons.forEach(button => {
+    buttons.forEach((button) => {
         if (button.textContent === jawabanPilih) {
             button.classList.add("animate-bounce");
         }
@@ -158,15 +172,15 @@ function updateTimerDisplay() {
 }
 
 function endRound() {
-    const benar = questions.filter((q) => q.hurufYangHilang === q.chosenAnswer).length;
-    const salah = questions.filter((q) => q.chosenAnswer !== null && q.hurufYangHilang !== q.chosenAnswer).length;
+    const benar = questions.filter((q) => q.elemenYangHilang === q.chosenAnswer).length;
+    const salah = questions.filter((q) => q.chosenAnswer !== null && q.elemenYangHilang !== q.chosenAnswer).length;
     const tidakTerjawab = questions.filter((q) => q.chosenAnswer === null).length;
 
     rondeResults.push({ benar, salah, tidakTerjawab });
 
     if (ronde < maxRonde) {
         ronde++;
-        document.getElementById("round-info").textContent = `Ronde ${ronde}`;
+        document.getElementById("round-info").textContent = `Ronde ${ronde}/10`;
         currentQuestionIndex = 0;
         buatSoal();
         tampilkanKolomUtama();
@@ -181,15 +195,19 @@ function showFinalResults() {
     const quizContainer = document.getElementById("quiz-container");
     quizContainer.innerHTML = `
         <h2 class="text-xl font-bold text-center mb-4">Hasil Akhir</h2>
-        <div class="grid grid-cols-5 gap-2">
-            ${rondeResults.map((result, index) => `
-                <div class="border p-2 rounded shadow-md text-center">
+        <div class="grid grid-cols-4 gap-2">
+            ${rondeResults
+                .map(
+                    (result, index) => `
+                <div class="border p-2 rounded shadow-md text-start">
                     <div class="font-semibold">Ronde ${index + 1}</div>
                     <div>Benar: ${result.benar}</div>
                     <div>Salah: ${result.salah}</div>
                     <div>Tidak Terjawab: ${result.tidakTerjawab}</div>
                 </div>
-            `).join('')}
+            `
+                )
+                .join("")}
         </div>
         <button onclick="resetQuiz()" class="bg-red-600 text-white py-2 px-4 rounded shadow mt-4">
             Restart Quiz
